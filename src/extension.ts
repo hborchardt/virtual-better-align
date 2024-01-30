@@ -90,7 +90,7 @@ function alignBlockEq(editor: vscode.TextEditor, blockStart: number): number {
         i = i+1;
         break;
       }
-      positions.push([i, match.index]);
+      positions.push([i, match.index+1]);
       if (line.match(/\{$/)) {
         // Trailing curly brace means new scope, so stop the current block here.
         i = i+1;
