@@ -2,7 +2,7 @@
   "name": "virtual-better-align",
   "displayName": "virtual-better-align",
   "description": "Like better-align extension, but instead of inserting spaces it visually shifts equal signs and colons.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "engines": {
     "vscode": "^1.85.0"
   },

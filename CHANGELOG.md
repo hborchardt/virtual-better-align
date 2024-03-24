@@ -2,6 +2,9 @@
 
 All notable changes to the "virtual-better-align" extension will be documented in this file.
 
+## [v0.1.1]
+- Update readme
+
 ## [v0.1.0]
 
 - Implement proper arrow key cursor handling
