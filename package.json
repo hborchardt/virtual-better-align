@@ -18,6 +18,41 @@
   "repository": "github:hborchardt/virtual-better-align",
   "license": "MIT",
   "contributes": {
+    "commands": [{
+      "command": "virtual-better-align.CursorUp",
+      "title": "Virtual Better Align: Move cursor up"
+    },{
+      "command": "virtual-better-align.CursorDown",
+      "title": "Virtual Better Align: Move cursor down"
+    },{
+      "command": "virtual-better-align.CursorShiftUp",
+      "title": "Virtual Better Align: Move selection cursor up"
+    },{
+      "command": "virtual-better-align.CursorShiftDown",
+      "title": "Virtual Better Align: Move selection cursor down"
+    }],
+    "keybindings": [
+      {
+        "command": "virtual-better-align.CursorUp",
+        "key": "up",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "virtual-better-align.CursorDown",
+        "key": "down",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "virtual-better-align.CursorShiftUp",
+        "key": "shift+up",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "virtual-better-align.CursorShiftDown",
+        "key": "shift+down",
+        "when": "editorTextFocus"
+      }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
