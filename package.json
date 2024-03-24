@@ -30,6 +30,9 @@
     },{
       "command": "virtual-better-align.CursorShiftDown",
       "title": "Virtual Better Align: Move selection cursor down"
+    },{
+      "command": "virtual-better-align.ToggleActive",
+      "title": "Virtual Better Align: Toggle active"
     }],
     "keybindings": [
       {

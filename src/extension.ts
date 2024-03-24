@@ -2,20 +2,17 @@
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 
-const decorationType = vscode.window.createTextEditorDecorationType({
+const decorationTypeProvider = () => vscode.window.createTextEditorDecorationType({
 });
+let decorationType = decorationTypeProvider();
 const decorations = new Map<string, Map<number, vscode.DecorationOptions>>();
 const addedSpaces = new Map<string, Map<number, {pos: vscode.Position; count: number}>>();
 const lastSelections = new Map<string, readonly vscode.Selection[]>();
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
-export function activate(context: vscode.ExtensionContext) {
+let enabled = true;
+let disposables: vscode.Disposable[] = [];
 
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	//console.log('Congratulations, your extension "virtual-better-align" is now active!');
-
+function setupEventHandlers(context: vscode.ExtensionContext) {
   let disposable = vscode.workspace.onDidChangeTextDocument(change => {
     //console.log(change);
     if (change.document !== vscode.window.activeTextEditor?.document) {
@@ -32,7 +29,8 @@ export function activate(context: vscode.ExtensionContext) {
     // });
 
   });
-	context.subscriptions.push(disposable);
+  context.subscriptions.push(disposable);
+  disposables.push(disposable);
 
   disposable = vscode.workspace.onDidOpenTextDocument(evt => {
     const editor = vscode.window.visibleTextEditors.find(editor => editor.document === evt);
@@ -41,15 +39,18 @@ export function activate(context: vscode.ExtensionContext) {
     }
     checkFullEditorDocument(editor);
   });
-	context.subscriptions.push(disposable);
+  context.subscriptions.push(disposable);
+  disposables.push(disposable);
 
   disposable = vscode.window.onDidChangeActiveTextEditor(editor => {
     if (editor === undefined) {
       return;
     }
+    lastSelections.set(editor.document.fileName, editor.selections);
     checkFullEditorDocument(editor);
   });
-	context.subscriptions.push(disposable);
+  context.subscriptions.push(disposable);
+  disposables.push(disposable);
 
   disposable = vscode.workspace.onDidCloseTextDocument(document => {
     // cleanup document specific variables to save memory
@@ -58,15 +59,35 @@ export function activate(context: vscode.ExtensionContext) {
     lastSelections.delete(document.fileName);
   });
   context.subscriptions.push(disposable);
+  disposables.push(disposable);
 
   disposable = vscode.window.onDidChangeTextEditorSelection(evt => {
     // track current selection for key handling
     lastSelections.set(evt.textEditor.document.fileName, evt.selections);
   });
   context.subscriptions.push(disposable);
+  disposables.push(disposable);
+}
+
+function disposeEventHandlers() {
+  disposables.forEach(disposable => disposable.dispose());
+}
+
+// This method is called when your extension is activated
+// Your extension is activated the very first time the command is executed
+export function activate(context: vscode.ExtensionContext) {
+
+  // Use the console to output diagnostic information (console.log) and errors (console.error)
+  // This line of code will only be executed once when your extension is activated
+  //console.log('Congratulations, your extension "virtual-better-align" is now active!');
+
+  setupEventHandlers(context);
 
   // setup up/down/shift+up/shift+down key handling
-  disposable = vscode.commands.registerCommand('virtual-better-align.CursorUp', () => {
+  let disposable = vscode.commands.registerCommand('virtual-better-align.CursorUp', () => {
+    if (!enabled) {
+      vscode.commands.executeCommand(`cursorUp`);
+    }
     if (!vscode.window.activeTextEditor) {
       return;
     }
@@ -74,6 +95,9 @@ export function activate(context: vscode.ExtensionContext) {
   });
   context.subscriptions.push(disposable);
   disposable = vscode.commands.registerCommand('virtual-better-align.CursorDown', () => {
+    if (!enabled) {
+      vscode.commands.executeCommand(`cursorDown`);
+    }
     if (!vscode.window.activeTextEditor) {
       return;
     }
@@ -81,6 +105,9 @@ export function activate(context: vscode.ExtensionContext) {
   });
   context.subscriptions.push(disposable);
   disposable = vscode.commands.registerCommand('virtual-better-align.CursorShiftUp', () => {
+    if (!enabled) {
+      vscode.commands.executeCommand(`cursorSelectUp`);
+    }
     if (!vscode.window.activeTextEditor) {
       return;
     }
@@ -88,12 +115,43 @@ export function activate(context: vscode.ExtensionContext) {
   });
   context.subscriptions.push(disposable);
   disposable = vscode.commands.registerCommand('virtual-better-align.CursorShiftDown', () => {
+    if (!enabled) {
+      vscode.commands.executeCommand(`cursorSelectDown`);
+    }
     if (!vscode.window.activeTextEditor) {
       return;
     }
     handleSelectionChange(vscode.window.activeTextEditor, 'down', true);
   });
   context.subscriptions.push(disposable);
+
+  disposable = vscode.commands.registerCommand('virtual-better-align.ToggleActive', () => {
+    if (enabled) {
+      // disable
+      enabled = false;
+      decorationType.dispose();
+      decorations.clear();
+      addedSpaces.clear();
+      lastSelections.clear();
+      disposeEventHandlers();
+    } else {
+      enabled = true;
+      decorationType = decorationTypeProvider();
+      const editor = vscode.window.activeTextEditor;
+      if (editor) {
+        lastSelections.set(editor.document.fileName, editor.selections);
+        checkFullEditorDocument(editor);
+      }
+      setupEventHandlers(context);
+    }
+  });
+  context.subscriptions.push(disposable);
+
+  const editor = vscode.window.activeTextEditor;
+  if (editor) {
+    lastSelections.set(editor.document.fileName, editor.selections);
+    checkFullEditorDocument(editor);
+  }
 }
 
 function handleSelectionChange(textEditor: vscode.TextEditor, dir: 'up' | 'down', keepAnchor: boolean) {
