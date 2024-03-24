@@ -281,15 +281,15 @@ function alignBlockColon(editor: vscode.TextEditor, blockStart: number): number 
         i = i+1;
         break;
       }
+      if (line.endsWith("{") || line.endsWith("[")) {
+        // don't align with beginning of multiline object or array, or with function declaration
+        i = i+1;
+        break;
+      }
       if (line.length <= match.index+2) {
         break;
       }
       positions.push([i, match.index+2]);
-      if (line.match(/\{$/)) {
-        // Trailing curly brace means new scope, so stop the current block here.
-        i = i+1;
-        break;
-      }
     } else {
       i = i+1;
       break;
